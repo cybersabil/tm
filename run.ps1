@@ -34,11 +34,11 @@ $IsAdmin = ([Security.Principal.WindowsPrincipal] `
 ).IsInRole([Security.Principal.WindowsBuiltInRole]::Administrator)
 
 $PowerShellExe = "$env:SystemRoot\System32\WindowsPowerShell\v1.0\powershell.exe"
-$Arguments = "-NoProfile -ExecutionPolicy Bypass -NoExit -File `"$MainFile`""
+$Arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$MainFile`""
 
 if (-not $IsAdmin) {
     Start-Process -FilePath $PowerShellExe -ArgumentList $Arguments -Verb RunAs
     exit
 }
 
-& $PowerShellExe -NoProfile -ExecutionPolicy Bypass -NoExit -File $MainFile
+& $PowerShellExe -NoProfile -ExecutionPolicy Bypass -File $MainFile
