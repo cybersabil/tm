@@ -38,7 +38,10 @@ $Arguments = "-NoProfile -ExecutionPolicy Bypass -File `"$MainFile`""
 
 if (-not $IsAdmin) {
     Start-Process -FilePath $PowerShellExe -ArgumentList $Arguments -Verb RunAs
-    exit
+    exit 0
 }
 
 & $PowerShellExe -NoProfile -ExecutionPolicy Bypass -File $MainFile
+$ExitCode = $LASTEXITCODE
+if ($null -eq $ExitCode) { $ExitCode = 0 }
+exit $ExitCode
