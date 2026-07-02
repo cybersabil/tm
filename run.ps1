@@ -1,4 +1,4 @@
-﻿# CyberSabil TM Online Launcher
+# CyberSabil TM Online Launcher
 $ErrorActionPreference = "Stop"
 
 try {
@@ -42,3 +42,5 @@ if (-not $IsAdmin) {
 }
 
 & $PowerShellExe -NoProfile -ExecutionPolicy Bypass -File $MainFile
+
+exit
