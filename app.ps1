@@ -1,43 +1,3 @@
-function Initialize-CyberSabilConsole {
-    try {
-        [Console]::OutputEncoding = [System.Text.UTF8Encoding]::new($false)
-        $script:OutputEncoding = [Console]::OutputEncoding
-    } catch {}
-
-    try {
-        chcp 65001 | Out-Null
-    } catch {}
-
-    try {
-        $Host.UI.RawUI.WindowTitle = "CyberSabil TM Setup"
-
-        $raw = $Host.UI.RawUI
-        $targetWidth = [Math]::Min(120, $raw.MaxWindowSize.Width)
-
-        if ($raw.BufferSize.Width -lt $targetWidth) {
-            $raw.BufferSize = New-Object System.Management.Automation.Host.Size(
-                $targetWidth,
-                $raw.BufferSize.Height
-            )
-        }
-
-        if ($raw.WindowSize.Width -lt $targetWidth) {
-            $targetHeight = [Math]::Min(
-                [Math]::Max(30, $raw.WindowSize.Height),
-                $raw.MaxWindowSize.Height
-            )
-
-            $raw.WindowSize = New-Object System.Management.Automation.Host.Size(
-                $targetWidth,
-                $targetHeight
-            )
-        }
-    } catch {}
-}
-
-Initialize-CyberSabilConsole
-Clear-Host
-
 # Quick elevation guard BEFORE banner output
 # This prevents the first non-admin PowerShell window from getting stuck on the banner.
 $QuickIsAdmin = ([Security.Principal.WindowsPrincipal] [Security.Principal.WindowsIdentity]::GetCurrent()).IsInRole(
@@ -68,13 +28,10 @@ try {
     [Console]::OutputEncoding = [System.Text.Encoding]::UTF8
     $OutputEncoding = [System.Text.Encoding]::UTF8
 
-    $raw = $host.UI.RawUI
-    $safeWidth = [Math]::Min(120, $raw.MaxWindowSize.Width)
-
-    $size = $raw.BufferSize
-    if ($size.Width -lt $safeWidth) {
-        $size.Width = $safeWidth
-        $raw.BufferSize = $size
+    $size = $host.UI.RawUI.BufferSize
+    if ($size.Width -lt 130) {
+        $size.Width = 130
+        $host.UI.RawUI.BufferSize = $size
     }
 } catch {}
 
@@ -87,21 +44,12 @@ PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09PT09
 $BannerBase64 = $BannerBase64 -replace '\s',''
 $Banner = [System.Text.Encoding]::UTF8.GetString([System.Convert]::FromBase64String($BannerBase64))
 
-$BannerLines = $Banner -split "`r?`n"
-$BannerWidth = 0
-foreach ($line in $BannerLines) {
-    if ($line.Length -gt $BannerWidth) { $BannerWidth = $line.Length }
-}
-
 function Show-CyberSabilBanner {
     param(
         [ConsoleColor]$Color = [ConsoleColor]::Cyan
     )
-
     Write-Host ""
-    foreach ($line in $BannerLines) {
-        Write-Host ($line.PadRight($BannerWidth)) -ForegroundColor $Color
-    }
+    Write-Host $Banner -ForegroundColor $Color
     Write-Host ""
 }
 
@@ -116,16 +64,6 @@ function Stop-ScriptWithStatus {
     Write-Host ""
     Read-Host "Press Enter to close"
     exit $Code
-}
-
-function Write-Utf8NoBomFile {
-    param(
-        [Parameter(Mandatory = $true)][string]$Path,
-        [Parameter(Mandatory = $true)][string]$Value
-    )
-
-    $utf8NoBom = New-Object System.Text.UTF8Encoding($false)
-    [System.IO.File]::WriteAllText($Path, $Value, $utf8NoBom)
 }
 
 trap {
@@ -286,7 +224,7 @@ $GlobalCfgContent = @'
 portable_mode = false
 '@
 
-Write-Utf8NoBomFile -Path $GlobalConfig -Value $GlobalCfgContent
+Set-Content -Path $GlobalConfig -Value $GlobalCfgContent -Encoding UTF8 -Force
 
 # Prepare AppData config folder
 New-Item -ItemType Directory -Path $AppDataTrafficDir -Force | Out-Null
@@ -465,10 +403,10 @@ SetItemOrderDlg_width = -1
 SetItemOrderDlg_height = -1
 '@
 
-Write-Utf8NoBomFile -Path $AppDataConfig -Value $WorkingConfig
+Set-Content -Path $AppDataConfig -Value $WorkingConfig -Encoding UTF8 -Force
 
 # Also keep same config in C:\TrafficMonitor\config.ini for reference/fallback
-Write-Utf8NoBomFile -Path $ProgramConfig -Value $WorkingConfig
+Set-Content -Path $ProgramConfig -Value $WorkingConfig -Encoding UTF8 -Force
 
 # Make sure current user has AppData config permission
 icacls $AppDataTrafficDir /grant "$($env:USERNAME):(OI)(CI)F" /T | Out-Null
